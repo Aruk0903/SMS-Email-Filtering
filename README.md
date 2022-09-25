@@ -142,7 +142,8 @@ I select the model with the most test precision
 ```python
 best_index = models['Test Precision'].idxmax()
 models.iloc[best_index, :]
-![image](https://user-images.githubusercontent.com/89111546/192168627-b1388af3-d8af-4fda-9a57-940e03a7b35c.png)
+```
+![image](https://user-images.githubusercontent.com/89111546/192168718-44359ed8-6520-4128-b088-aad27df083f4.png)
 
 My best model does not produce any false positive, which is our goal.
 
