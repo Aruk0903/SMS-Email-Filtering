@@ -1,6 +1,6 @@
 # SMS-Email-Filtering
 # Spam classification with Naive Bayes and Support Vector Machines.
-Libraries
+# Libraries
 ```python
 import numpy as np
 import pandas as pd
@@ -12,14 +12,14 @@ import warnings
 warnings.filterwarnings("ignore")
 %matplotlib inline  
 ```
-Exploring the Dataset
+# Exploring the Dataset
 ```python
 data = pd.read_csv('../input/spam.csv', encoding='latin-1')
 data.head(n=10)
 ```
 ![image](https://user-images.githubusercontent.com/89111546/192168055-8d7dcb72-9c38-4da2-a0e4-99218783f1aa.png)
 
-Distribution spam/non-spam plots
+# Distribution spam/non-spam plots
 ```python
 count_Class=pd.value_counts(data["v1"], sort= True)
 count_Class.plot(kind= 'bar', color= ["blue", "orange"])
