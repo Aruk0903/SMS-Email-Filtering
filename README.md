@@ -87,3 +87,164 @@ np.shape(X)
 
 We have created more than 8400 new features. The new feature  j  in the row  i  is equal to 1 if the word  wj  appears in the text example  i . It is zero if not.
 
+# Predictive Analysis
+My goal is to predict if a new sms is spam or non-spam. I assume that is much worse misclassify non-spam than misclassify an spam. (I don't want to have false positives)
+
+The reason is because I normally don't check the spam messages.
+The two possible situations are:
+New spam sms in my inbox. (False negative).
+OUTCOME: I delete it.
+New non-spam sms in my spam folder (False positive).
+OUTCOME: I probably don't read it.
+
+I prefer the first option!!!
+
+First we transform the variable spam/non-spam into binary variable, then we split our data set in training set and test set.
+```python
+data["v1"]=data["v1"].map({'spam':1,'ham':0})
+X_train, X_test, y_train, y_test = model_selection.train_test_split(X, data['v1'], test_size=0.33, random_state=42)
+print([np.shape(X_train), np.shape(X_test)])
+```
+![image](https://user-images.githubusercontent.com/89111546/192168298-14bc3464-8798-41b9-a129-10c3edb33262.png)
+
+# Multinomial naive bayes classifier
+We train different bayes models changing the regularization parameter  α .
+
+We evaluate the accuracy, recall and precision of the model with the test set.
+```python
+list_alpha = np.arange(1/100000, 20, 0.11)
+score_train = np.zeros(len(list_alpha))
+score_test = np.zeros(len(list_alpha))
+recall_test = np.zeros(len(list_alpha))
+precision_test= np.zeros(len(list_alpha))
+count = 0
+for alpha in list_alpha:
+    bayes = naive_bayes.MultinomialNB(alpha=alpha)
+    bayes.fit(X_train, y_train)
+    score_train[count] = bayes.score(X_train, y_train)
+    score_test[count]= bayes.score(X_test, y_test)
+    recall_test[count] = metrics.recall_score(y_test, bayes.predict(X_test))
+    precision_test[count] = metrics.precision_score(y_test, bayes.predict(X_test))
+    count = count + 1 
+```
+Let's see the first 10 learning models and their metrics!
+```python
+matrix = np.matrix(np.c_[list_alpha, score_train, score_test, recall_test, precision_test])
+models = pd.DataFrame(data = matrix, columns = 
+             ['alpha', 'Train Accuracy', 'Test Accuracy', 'Test Recall', 'Test Precision'])
+models.head(n=10)
+```
+![image](https://user-images.githubusercontent.com/89111546/192168345-5e414885-891c-4388-ac1f-c0945b545839.png)
+
+I select the model with the most test precision
+```python
+best_index = models['Test Precision'].idxmax()
+models.iloc[best_index, :]
+![image](https://user-images.githubusercontent.com/89111546/192168363-9a0f5586-0ffb-420a-b155-a9dfc724f533.png)
+
+My best model does not produce any false positive, which is our goal.
+
+Let's see if there is more than one model with 100% precision !
+```python
+models[models['Test Precision']==1].head(n=5)
+```
+![image](https://user-images.githubusercontent.com/89111546/192168375-78a70bdd-b3c3-43d6-9e60-5f0c78eedc6e.png)
+
+Between these models with the highest possible precision, we are going to select which has more test accuracy.
+```python
+best_index = models[models['Test Precision']==1]['Test Accuracy'].idxmax()
+bayes = naive_bayes.MultinomialNB(alpha=list_alpha[best_index])
+bayes.fit(X_train, y_train)
+models.iloc[best_index, :]
+```
+![image](https://user-images.githubusercontent.com/89111546/192168390-ce19cde0-16ee-4e49-ad51-07c48bb98918.png)
+
+# Confusion matrix with naive bayes classifier
+```python
+m_confusion_test = metrics.confusion_matrix(y_test, bayes.predict(X_test))
+pd.DataFrame(data = m_confusion_test, columns = ['Predicted 0', 'Predicted 1'],
+            index = ['Actual 0', 'Actual 1'])
+```
+![image](https://user-images.githubusercontent.com/89111546/192168412-8313efe6-f0e9-488c-a168-fb80b59c7d77.png)
+
+We misclassify 56 spam messages as non-spam emails whereas we don't misclassify any non-spam message.
+
+
+# Support Vector Machine
+We are going to apply the same reasoning applying the support vector machine model with the gaussian kernel.
+We train different models changing the regularization parameter C.
+We evaluate the accuracy, recall and precision of the model with the test set.
+
+```python
+list_C = np.arange(500, 2000, 100) #100000
+score_train = np.zeros(len(list_C))
+score_test = np.zeros(len(list_C))
+recall_test = np.zeros(len(list_C))
+precision_test= np.zeros(len(list_C))
+count = 0
+for C in list_C:
+    svc = svm.SVC(C=C)
+    svc.fit(X_train, y_train)
+    score_train[count] = svc.score(X_train, y_train)
+    score_test[count]= svc.score(X_test, y_test)
+    recall_test[count] = metrics.recall_score(y_test, svc.predict(X_test))
+    precision_test[count] = metrics.precision_score(y_test, svc.predict(X_test))
+    count = count + 1 
+```
+Let's see the first 10 learning models and their metrics!
+```python
+matrix = np.matrix(np.c_[list_C, score_train, score_test, recall_test, precision_test])
+models = pd.DataFrame(data = matrix, columns = 
+             ['C', 'Train Accuracy', 'Test Accuracy', 'Test Recall', 'Test Precision'])
+models.head(n=10)
+```
+![image](https://user-images.githubusercontent.com/89111546/192168441-abc19b46-87f0-47bb-b9f7-756a43bc581c.png)
+
+I select the model with the most test precision
+```python
+best_index = models['Test Precision'].idxmax()
+models.iloc[best_index, :]
+```
+![image](https://user-images.githubusercontent.com/89111546/192168451-0b9cca7a-17a8-41b8-b091-10ca66e56b7f.png)
+My best model does not produce any false positive, which is our goal.
+
+Let's see if there is more than one model with 100% precision !
+```python
+models[models['Test Precision']==1].head(n=5)
+```
+![image](https://user-images.githubusercontent.com/89111546/192168468-3f018730-18ce-4967-bd9e-5c81ce301ef0.png)
+
+Between these models with the highest possible precision, we are going to selct which has more test accuracy.
+```python
+best_index = models[models['Test Precision']==1]['Test Accuracy'].idxmax()
+svc = svm.SVC(C=list_C[best_index])
+svc.fit(X_train, y_train)
+models.iloc[best_index, :]
+```
+![image](https://user-images.githubusercontent.com/89111546/192168485-7900c773-4d4a-4200-8aaa-140703793604.png)
+
+# Confusion matrix with support vector machine classifier.
+```python
+m_confusion_test = metrics.confusion_matrix(y_test, svc.predict(X_test))
+pd.DataFrame(data = m_confusion_test, columns = ['Predicted 0', 'Predicted 1'],
+            index = ['Actual 0', 'Actual 1'])
+```
+![image](https://user-images.githubusercontent.com/89111546/192168498-7ab128e4-383c-4ab4-85ff-efe03a091a07.png)
+
+We misclassify 31 spam as non-spam messages whereas we don't misclassify any non-spam message.
+
+The best model I have found is support vector machine with 98.3% accuracy.
+
+It classifies every non-spam message correctly (Model precision)
+
+It classifies the 87.7% of spam messages correctly (Model recall)
+
+
+
+
+
+
+
+
+
+
