@@ -209,6 +209,7 @@ best_index = models['Test Precision'].idxmax()
 models.iloc[best_index, :]
 ```
 ![image](https://user-images.githubusercontent.com/89111546/192168451-0b9cca7a-17a8-41b8-b091-10ca66e56b7f.png)
+
 My best model does not produce any false positive, which is our goal.
 
 Let's see if there is more than one model with 100% precision !
