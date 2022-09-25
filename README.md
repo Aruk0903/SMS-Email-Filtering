@@ -48,6 +48,8 @@ df1 = df1.rename(columns={0: "words in non-spam", 1 : "count"})
 count2 = Counter(" ".join(data[data['v1']=='spam']["v2"]).split()).most_common(20)
 df2 = pd.DataFrame.from_dict(count2)
 df2 = df2.rename(columns={0: "words in spam", 1 : "count_"})
+```
+```python
 df1.plot.bar(legend = False)
 y_pos = np.arange(len(df1["words in non-spam"]))
 plt.xticks(y_pos, df1["words in non-spam"])
